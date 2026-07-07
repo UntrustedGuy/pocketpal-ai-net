@@ -765,6 +765,30 @@ const handleWebSearchUrlChange = (text: string) => {
             </Card.Content>
           </Card>
 
+          {/* Web Search Settings */}
+<Card elevation={0} style={styles.card}>
+  <Card.Title title="Web Search" />
+  <Card.Content>
+    <View style={styles.settingItemContainer}>
+      <Text variant="titleMedium" style={styles.textLabel}>
+        SearXNG Instance URL
+      </Text>
+      <TextInput
+        testID="web-search-url-input"
+        style={styles.textInput}
+        value={webSearchUrl}
+        onChangeText={handleWebSearchUrlChange}
+        placeholder="https://your-searxng-instance.com"
+        autoCapitalize="none"
+        autoCorrect={false}
+      />
+      <Text variant="labelSmall" style={styles.textDescription}>
+        Enter your self-hosted SearXNG URL to let the model search the web. Leave empty to disable web search.
+      </Text>
+    </View>
+  </Card.Content>
+</Card>
+
           {/* Memory Settings */}
           <Card elevation={0} style={styles.card}>
             <Card.Title title={l10n.settings.memorySettings} />
