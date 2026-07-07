@@ -113,6 +113,27 @@ export const SettingsScreen: React.FC = observer(() => {
     }, 500),
   ).current;
 
+  const [webSearchUrl, setWebSearchUrl] = useState('');
+
+useEffect(() => {
+  getSearchEndpoint().then(url => {
+    if (url) {
+      setWebSearchUrl(url);
+    }
+  });
+}, []);
+
+const debouncedSaveSearchUrl = useRef(
+  debounce((value: string) => {
+    setSearchEndpoint(value);
+  }, 500),
+).current;
+
+const handleWebSearchUrlChange = (text: string) => {
+  setWebSearchUrl(text);
+  debouncedSaveSearchUrl(text);
+};
+
   useEffect(() => {
     setContextSize(modelStore.contextInitParams.n_ctx.toString());
 
