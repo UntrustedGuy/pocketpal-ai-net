@@ -13,6 +13,7 @@ export {RenderHtmlEngine} from './RenderHtmlEngine';
 export {RenderHtmlTalentUI} from './RenderHtmlTalentUI';
 export {CalculateEngine} from './CalculateEngine';
 export {DatetimeEngine} from './DatetimeEngine';
+import {WebSearchEngine} from './WebSearchEngine';
 export type {TalentEngine, TalentResult, ToolDefinition} from './types';
 
 let registered = false;
@@ -29,6 +30,7 @@ export function registerDefaultTalents(): void {
   talentRegistry.register(new RenderHtmlEngine());
   talentRegistry.register(new CalculateEngine());
   talentRegistry.register(new DatetimeEngine());
+  talentRegistry.register(new WebSearchEngine());
   // UIs
   talentUIRegistry.register(new RenderHtmlTalentUI());
   registered = true;
