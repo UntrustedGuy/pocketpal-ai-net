@@ -800,12 +800,14 @@
       "talentNames": {
         "render_html": "HTML preview",
         "calculate": "Math expressions",
-        "datetime": "Date & time"
+        "datetime": "Date & time",
+        "web_search": "Web search"
       },
       "talentDescriptions": {
         "render_html": "Render HTML documents inline in chat",
         "calculate": "Evaluate mathematical expressions",
-        "datetime": "Get the current date and time"
+        "datetime": "Get the current date and time",
+        "web_search": "Search the web for current information"
       },
       "greeting": {
         "sectionLabel": "Greeting",
