@@ -6,7 +6,7 @@
       "version": "17"
     },
     "ghcr.io/devcontainers/features/node:1": {
-      "version": "20"
+      "version": "22"
     }
   },
   "postCreateCommand": "curl -o cmdline-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip && unzip -q cmdline-tools.zip -d $HOME/android-sdk/cmdline-tools && mv $HOME/android-sdk/cmdline-tools/cmdline-tools $HOME/android-sdk/cmdline-tools/latest && echo 'export ANDROID_HOME=$HOME/android-sdk' >> ~/.bashrc && echo 'export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools' >> ~/.bashrc && yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses && $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager 'platform-tools' 'platforms;android-34' 'build-tools;34.0.0' && npm install"
