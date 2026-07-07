@@ -66,6 +66,7 @@ import {
   getAllowedCacheTypeKOptions,
   getAllowedCacheTypeVOptions,
 } from '../../utils/flashAttnCompatibility';
+import {getSearchEndpoint, setSearchEndpoint} from '../../services/talents/webSearchConfig';
 
 // OpenCL documentation URL (not localized)
 const OPENCL_DOCS_URL =
