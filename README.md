@@ -81,22 +81,4 @@ In PocketPalNet: **Settings → Web Search**, enter:
 http://127.0.0.1:8888
 ```
 
----
-
-## Building From Source
-
-If you want to build this fork yourself rather than installing a release APK:
-
-```bash
-git clone https://github.com/UntrustedGuy/pocketpal-ai-net.git
-cd pocketpal-ai-net
-yarn install
-cd android
-./gradlew assembleProdRelease
-```
-
-Requirements: Node ≥22.21.0, JDK 17, Android SDK (platform-tools, `platforms;android-34`, `build-tools;34.0.0`, `ndk;27.3.13750724`), Gradle 9.0 (bundled via the wrapper).
-
----
-
 This was made with my half backed knowledge on programming and claude ai
