@@ -17,7 +17,7 @@
 You control your own SearXNG instance — nothing is routed through any server operated by this project. The app just needs a URL pointing at an instance you run yourself.
 
 ### Requirements for web search to actually work
-- A model with reliable tool/function-calling support in its chat template (e.g. Qwen2.5-Instruct family). Not all GGUF models support this — some will silently ignore the tool and answer from memory instead.
+- A model with reliable tool/function-calling support in its chat template (e.g. Qwen2.5-Instruct). Not all GGUF models support this — some will silently ignore the tool and answer from memory instead.
 - A running SearXNG instance, reachable from your device, with JSON output format enabled.
 - The `web_search` talent toggled on for the Pal you're using.
 
