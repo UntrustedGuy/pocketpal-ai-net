@@ -81,4 +81,5 @@ In PocketPalNet: **Settings → Web Search**, enter:
 http://127.0.0.1:8888
 ```
 
+
 This was made with my half backed knowledge on programming and claude ai
