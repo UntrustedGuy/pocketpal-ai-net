@@ -31,12 +31,14 @@ Since PocketPal is a mobile app, this section covers running SearXNG **directly 
 Get it from [F-Droid](https://f-droid.org/packages/com.termux/) (not the outdated Play Store version).
 
 ### 2. Set up Termux and install dependencies
+Open termux and accept the notification permission and then copy paste the below command and choose y for all choices
 ```bash
 pkg update && pkg upgrade
 pkg install python git build-essential libxml2 libxslt rust
 ```
 
 ### 3. Clone and install SearXNG
+after that is over paste the following command. Saying this before hand this will take a while.
 ```bash
 cd ~
 git clone https://github.com/searxng/searxng.git
@@ -54,11 +56,13 @@ Generate a secret key:
 ```bash
 python -c "import secrets; print(secrets.token_hex(16))"
 ```
+you will get an token here copy that (very important)
 
 Edit the settings file:
 ```bash
 nano searx/settings.yml
 ```
+you should use search option for these as the file is huge. To access search you need to click the CTRL option on the termux option and then click w. From there type what you want to search and press enter.
 - Find `secret_key: "ultrasecretkey"` and replace the value with the key you just generated.
 - Find the `formats:` section and add `json` so it reads:
   ```yaml
@@ -66,20 +70,30 @@ nano searx/settings.yml
       - html
       - json
   ```
-Save with `Ctrl+O`, `Enter`, then exit with `Ctrl+X`.
+Save with `Ctrl+O`, `Enter`, then exit with `Ctrl+X`. 
+Or you can just press `Ctrl+X`, `y`, `Enter`.
 
 ### 5. Run the server
 ```bash
 python searx/webapp.py
 ```
 
-By default this serves on `http://127.0.0.1:8888`. Keep this Termux session running in the background whenever you want web search to work — disable battery optimization for Termux (Settings → Apps → Termux → Battery → Unrestricted) so Android doesn't kill the process.
+By default this serves on `http://127.0.0.1:8888`. Keep this Termux session running in the background whenever you want web search to work — disable battery optimization for Termux (Settings → Apps → Termux → Battery → Unrestricted) so Android doesn't kill the process. Also press Acquire Wakelock in the termux notification.
 
 ### 6. Point the app at it
 In PocketPalNet: **Settings → Web Search**, enter:
 ```
 http://127.0.0.1:8888
 ```
+---
+### Closing the server
+you can close the server by pressing `Ctrl+c`, `Enter`. then just open the notifications and click Release Wakelock and exit.
 
+### Restarting the server
+run this command to restart
+```bash
+python searx/webapp.py
+```
+---
 ---
 This was made with my half backed knowledge on programming and claude ai
