@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:123456789:android:dummy",
         "android_client_info": {
-          "package_name": "com.pocketpalai"
+          "package_name": "com.pocketpalainet.untrusted"
         }
       },
       "oauth_client": [],
