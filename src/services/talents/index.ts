@@ -4,6 +4,7 @@ import {CalculateEngine} from './CalculateEngine';
 import {DatetimeEngine} from './DatetimeEngine';
 import {talentRegistry} from './TalentRegistry';
 import {talentUIRegistry} from './TalentUIRegistry';
+import {WebSearchEngine} from './WebSearchEngine';
 import type {ToolDefinition} from './types';
 
 export {TalentRegistry, talentRegistry} from './TalentRegistry';
@@ -13,7 +14,6 @@ export {RenderHtmlEngine} from './RenderHtmlEngine';
 export {RenderHtmlTalentUI} from './RenderHtmlTalentUI';
 export {CalculateEngine} from './CalculateEngine';
 export {DatetimeEngine} from './DatetimeEngine';
-import {WebSearchEngine} from './WebSearchEngine';
 export type {TalentEngine, TalentResult, ToolDefinition} from './types';
 
 let registered = false;
