@@ -95,5 +95,4 @@ run this command to restart
 python searx/webapp.py
 ```
 ---
----
 This was made with my half backed knowledge on programming and claude ai
