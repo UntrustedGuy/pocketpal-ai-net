@@ -95,4 +95,16 @@ run this command to restart
 python searx/webapp.py
 ```
 ---
+### Screenshots:
+<p align="center">
+  <img src="https://raw.githubusercontent.com/UntrustedGuy/pocketpal-ai-net/refs/heads/main/assets/images%20and%20logos/screenshots/Android/Settings.png" width="120" alt="PocketPalNet Settings Screenshot">
+</p>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/UntrustedGuy/pocketpal-ai-net/refs/heads/main/assets/images%20and%20logos/screenshots/Android/Pal.png" width="120" alt="PocketPalNet Pal Settings Screenshot">
+</p>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/UntrustedGuy/pocketpal-ai-net/refs/heads/main/assets/images%20and%20logos/screenshots/Android/Chat.png" width="120" alt="PocketPalNet Chat Screenshot">
+</p>
+I know i used a weird prompt but hey it works
+---
 This was made with my half backed knowledge on programming and claude ai
