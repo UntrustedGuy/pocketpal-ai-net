@@ -24,7 +24,7 @@ You control your own SearXNG instance — nothing is routed through any server o
 ---
 
 ### About all available options
-SearXNG **Free, self-hosted** – No API key required. You host your own SearXNG instance. The guide to setup is available below.
+SearXNG **(Free, self-hosted)** – No API key required. You host your own SearXNG instance. The guide to setup is available below.
 
 **ALL THE OTHER NEED AN ACCOUNT**
 
