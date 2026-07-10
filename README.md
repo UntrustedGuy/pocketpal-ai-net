@@ -46,6 +46,7 @@ Includes **1,000 free API credits per month** (no credit card required). Paid an
 
 Google Custom Search (Google CSE)
 API Key: https://console.cloud.google.com/apis/credentials
+
 Search Engine ID (cx): https://programmablesearchengine.google.com/controlpanel/all
 
 **Paid**. Requires both a Google API Key and a Programmable Search Engine ID (`cx`).
