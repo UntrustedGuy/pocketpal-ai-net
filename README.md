@@ -23,6 +23,10 @@ You control your own SearXNG instance — nothing is routed through any server o
 
 ---
 
+### About api setup
+
+---
+
 ## Running Your Own SearXNG Instance on Android (Termux)
 
 Since PocketPal is a mobile app, this section covers running SearXNG **directly on your Android device** via Termux — no PC, server, or Docker required. If you'd rather run SearXNG elsewhere (a PC, home server, or cloud VM), any standard SearXNG installation guide works fine too; the app just needs an HTTP URL pointing at it.
