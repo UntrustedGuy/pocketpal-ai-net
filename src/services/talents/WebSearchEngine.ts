@@ -1,16 +1,15 @@
 import {TalentEngine, TalentResult, ToolDefinition} from './types';
-import {getSearchProvider, getSearchEndpoint, getTavilyApiKey} from './webSearchConfig';
+import {
+  getSearchProvider,
+  getSearchEndpoint,
+  getGoogleCseId,
+  getApiKey,
+} from './webSearchConfig';
 
-interface SearxResult {
+interface AdapterItem {
   title?: string;
   url?: string;
-  content?: string;
-}
-
-interface TavilyResult {
-  title?: string;
-  url?: string;
-  content?: string;
+  snippet?: string;
 }
 
 export class WebSearchEngine implements TalentEngine {
@@ -25,9 +24,21 @@ export class WebSearchEngine implements TalentEngine {
     }
 
     const provider = await getSearchProvider();
-    return provider === 'tavily'
-      ? this.executeTavily(query)
-      : this.executeSearxng(query);
+    switch (provider) {
+      case 'tavily':
+        return this.executeTavily(query);
+      case 'brave':
+        return this.executeBrave(query);
+      case 'serper':
+        return this.executeSerper(query);
+      case 'exa':
+        return this.executeExa(query);
+      case 'google_cse':
+        return this.executeGoogleCse(query);
+      case 'searxng':
+      default:
+        return this.executeSearxng(query);
+    }
   }
 
   private async executeSearxng(query: string): Promise<TalentResult> {
@@ -37,106 +48,203 @@ export class WebSearchEngine implements TalentEngine {
         'web_search is not configured. The user must set a SearXNG instance URL in Settings before this tool can be used.';
       return {type: 'error', summary: msg, errorMessage: msg};
     }
-
-    try {
-      const url = `${endpoint.replace(/\/$/, '')}/search?q=${encodeURIComponent(
+    return this.doFetch(
+      `${endpoint.replace(/\/$/, '')}/search?q=${encodeURIComponent(
         query,
-      )}&format=json`;
-
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 15000);
-      const res = await fetch(url, {signal: controller.signal});
-      clearTimeout(timeout);
-
-      if (!res.ok) {
-        const msg = `web_search: SearXNG instance returned HTTP ${res.status}`;
-        return {type: 'error', summary: msg, errorMessage: msg};
-      }
-
-      const data = await res.json();
-      const results: SearxResult[] = Array.isArray(data?.results)
-        ? data.results.slice(0, 5)
-        : [];
-
-      if (results.length === 0) {
-        return {type: 'text', summary: `No results found for "${query}".`};
-      }
-
-      const summary = results
-        .map((r, i) => {
-          const title = r.title ?? '(untitled)';
-          const snippet = (r.content ?? '').slice(0, 300);
-          return `${i + 1}. ${title}\n${r.url ?? ''}\n${snippet}`;
-        })
-        .join('\n\n');
-
-      return {type: 'text', summary};
-    } catch (e) {
-      return this.handleFetchError(e, 'SearXNG instance may be unreachable');
-    }
+      )}&format=json`,
+      {},
+      'SearXNG',
+      data =>
+        (Array.isArray(data?.results) ? data.results : []).map(
+          (r: any): AdapterItem => ({
+            title: r.title,
+            url: r.url,
+            snippet: r.content,
+          }),
+        ),
+    );
   }
 
   private async executeTavily(query: string): Promise<TalentResult> {
-    const apiKey = await getTavilyApiKey();
+    const apiKey = await getApiKey('tavily');
     if (!apiKey) {
+      return this.missingKey('tavily');
+    }
+    return this.doFetch(
+      'https://api.tavily.com/search',
+      {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({api_key: apiKey, query, max_results: 5}),
+      },
+      'Tavily',
+      data =>
+        (Array.isArray(data?.results) ? data.results : []).map(
+          (r: any): AdapterItem => ({
+            title: r.title,
+            url: r.url,
+            snippet: r.content,
+          }),
+        ),
+    );
+  }
+
+  private async executeBrave(query: string): Promise<TalentResult> {
+    const apiKey = await getApiKey('brave');
+    if (!apiKey) {
+      return this.missingKey('brave');
+    }
+    return this.doFetch(
+      `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(
+        query,
+      )}&count=5`,
+      {
+        headers: {
+          Accept: 'application/json',
+          'X-Subscription-Token': apiKey,
+        },
+      },
+      'Brave',
+      data =>
+        (Array.isArray(data?.web?.results) ? data.web.results : []).map(
+          (r: any): AdapterItem => ({
+            title: r.title,
+            url: r.url,
+            snippet: r.description,
+          }),
+        ),
+    );
+  }
+
+  private async executeSerper(query: string): Promise<TalentResult> {
+    const apiKey = await getApiKey('serper');
+    if (!apiKey) {
+      return this.missingKey('serper');
+    }
+    return this.doFetch(
+      'https://google.serper.dev/search',
+      {
+        method: 'POST',
+        headers: {
+          'X-API-KEY': apiKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({q: query, num: 5}),
+      },
+      'Serper',
+      data =>
+        (Array.isArray(data?.organic) ? data.organic : []).map(
+          (r: any): AdapterItem => ({
+            title: r.title,
+            url: r.link,
+            snippet: r.snippet,
+          }),
+        ),
+    );
+  }
+
+  private async executeExa(query: string): Promise<TalentResult> {
+    const apiKey = await getApiKey('exa');
+    if (!apiKey) {
+      return this.missingKey('exa');
+    }
+    return this.doFetch(
+      'https://api.exa.ai/search',
+      {
+        method: 'POST',
+        headers: {
+          'x-api-key': apiKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({query, numResults: 5, type: 'auto'}),
+      },
+      'Exa',
+      data =>
+        (Array.isArray(data?.results) ? data.results : []).map(
+          (r: any): AdapterItem => ({
+            title: r.title,
+            url: r.url,
+            snippet: (r.text ?? '').slice(0, 300),
+          }),
+        ),
+    );
+  }
+
+  private async executeGoogleCse(query: string): Promise<TalentResult> {
+    const apiKey = await getApiKey('google_cse');
+    const cx = await getGoogleCseId();
+    if (!apiKey || !cx) {
       const msg =
-        'web_search is not configured. The user must set a Tavily API key in Settings before this tool can be used.';
+        'web_search is not configured. The user must set both a Google API key and a Search Engine ID (cx) in Settings before this tool can be used.';
       return {type: 'error', summary: msg, errorMessage: msg};
     }
+    return this.doFetch(
+      `https://www.googleapis.com/customsearch/v1?key=${encodeURIComponent(
+        apiKey,
+      )}&cx=${encodeURIComponent(cx)}&q=${encodeURIComponent(query)}&num=5`,
+      {},
+      'Google CSE',
+      data =>
+        (Array.isArray(data?.items) ? data.items : []).map(
+          (r: any): AdapterItem => ({
+            title: r.title,
+            url: r.link,
+            snippet: r.snippet,
+          }),
+        ),
+    );
+  }
 
+  /** Shared fetch + timeout + JSON parse + formatting logic for all providers. */
+  private async doFetch(
+    url: string,
+    init: RequestInit,
+    providerLabel: string,
+    extract: (data: any) => AdapterItem[],
+  ): Promise<TalentResult> {
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 15000);
-      const res = await fetch('https://api.tavily.com/search', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          api_key: apiKey,
-          query,
-          max_results: 5,
-        }),
-        signal: controller.signal,
-      });
+      const res = await fetch(url, {...init, signal: controller.signal});
       clearTimeout(timeout);
 
       if (!res.ok) {
         const msg =
           res.status === 401 || res.status === 403
-            ? 'web_search: Tavily rejected the API key (check it in Settings)'
-            : `web_search: Tavily returned HTTP ${res.status}`;
+            ? `web_search: ${providerLabel} rejected the API key (check it in Settings)`
+            : `web_search: ${providerLabel} returned HTTP ${res.status}`;
         return {type: 'error', summary: msg, errorMessage: msg};
       }
 
       const data = await res.json();
-      const results: TavilyResult[] = Array.isArray(data?.results)
-        ? data.results.slice(0, 5)
-        : [];
+      const items = extract(data).slice(0, 5);
 
-      if (results.length === 0) {
-        return {type: 'text', summary: `No results found for "${query}".`};
+      if (items.length === 0) {
+        return {type: 'text', summary: `No results found.`};
       }
 
-      const summary = results
+      const summary = items
         .map((r, i) => {
           const title = r.title ?? '(untitled)';
-          const snippet = (r.content ?? '').slice(0, 300);
+          const snippet = (r.snippet ?? '').slice(0, 300);
           return `${i + 1}. ${title}\n${r.url ?? ''}\n${snippet}`;
         })
         .join('\n\n');
 
       return {type: 'text', summary};
     } catch (e) {
-      return this.handleFetchError(e, 'Tavily may be unreachable');
+      const errMsg = e instanceof Error ? e.message : String(e);
+      const isAbort = errMsg.toLowerCase().includes('abort');
+      const msg = isAbort
+        ? `web_search: request timed out. ${providerLabel} may be unreachable.`
+        : `web_search: ${errMsg}`;
+      return {type: 'error', summary: msg, errorMessage: errMsg};
     }
   }
 
-  private handleFetchError(e: unknown, hint: string): TalentResult {
-    const errMsg = e instanceof Error ? e.message : String(e);
-    const isAbort = errMsg.toLowerCase().includes('abort');
-    const msg = isAbort
-      ? `web_search: request timed out. ${hint}.`
-      : `web_search: ${errMsg}`;
-    return {type: 'error', summary: msg, errorMessage: errMsg};
+  private missingKey(provider: string): TalentResult {
+    const msg = `web_search is not configured. The user must set a ${provider} API key in Settings before this tool can be used.`;
+    return {type: 'error', summary: msg, errorMessage: msg};
   }
 
   toToolDefinition(): ToolDefinition {
