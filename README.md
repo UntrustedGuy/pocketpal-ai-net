@@ -23,7 +23,32 @@ You control your own SearXNG instance — nothing is routed through any server o
 
 ---
 
-### About api setup
+### About all available options
+SearXNG (Free, self-hosted)* – No API key required. You host your own SearXNG instance. The guide to setup is available below.
+
+**ALL THE OTHER NEED AN ACCOUNT**
+
+Brave Search API — https://api-dashboard.search.brave.com
+
+Includes **$5 of free API credits every month**. After that, usage is paid. This needs your card details even to use the free credit iirc so you should decide if you want this or not.
+
+Serper — https://serper.dev
+
+Free tier available for testing/development (no credit card required). Higher usage requires a paid plan.
+
+Exa — https://dashboard.exa.ai/api-keys
+
+Includes **20,000 free requests per month** (no credit card required). Paid plans are available for higher usage.
+
+Tavily — https://app.tavily.com/home
+
+Includes **1,000 free API credits per month** (no credit card required). Paid and pay-as-you-go plans are available.
+
+Google Custom Search (Google CSE)
+API Key: https://console.cloud.google.com/apis/credentials
+Search Engine ID (cx): https://programmablesearchengine.google.com/controlpanel/all
+
+**Paid**. Requires both a Google API Key and a Programmable Search Engine ID (`cx`).
 
 ---
 
