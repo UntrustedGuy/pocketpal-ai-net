@@ -1,10 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Keychain from 'react-native-keychain';
 
 export type WebSearchProvider = 'searxng' | 'tavily';
 
 const PROVIDER_KEY = 'webSearchProvider';
 const SEARXNG_ENDPOINT_KEY = 'webSearchEndpoint';
-const TAVILY_API_KEY_KEY = 'webSearchTavilyApiKey';
+const TAVILY_KEYCHAIN_SERVICE = 'pocketpalnet.tavily_api_key';
 
 export async function getSearchProvider(): Promise<WebSearchProvider> {
   try {
@@ -57,30 +58,41 @@ export async function setSearchEndpoint(
 }
 
 /**
- * Reads the user-configured Tavily API key.
+ * Reads the user-configured Tavily API key from the OS-encrypted
+ * keystore (Android Keystore-backed via react-native-keychain).
  * Returns null if not yet set.
  */
 export async function getTavilyApiKey(): Promise<string | null> {
   try {
-    const value = await AsyncStorage.getItem(TAVILY_API_KEY_KEY);
+    const creds = await Keychain.getGenericPassword({
+      service: TAVILY_KEYCHAIN_SERVICE,
+    });
+    if (!creds) {
+      return null;
+    }
+    const value = creds.password;
     return value && value.trim().length > 0 ? value.trim() : null;
-  } catch {
+  } catch (e) {
+    console.error('Failed to read Tavily API key from keychain:', e);
     return null;
   }
 }
 
 /**
- * Persists the user's Tavily API key. Pass an empty string
- * or null to clear it.
+ * Persists the user's Tavily API key to the OS-encrypted keystore.
+ * Pass an empty string or null to clear it.
  */
 export async function setTavilyApiKey(key: string | null): Promise<void> {
   try {
     if (!key || key.trim().length === 0) {
-      await AsyncStorage.removeItem(TAVILY_API_KEY_KEY);
+      await Keychain.resetGenericPassword({service: TAVILY_KEYCHAIN_SERVICE});
     } else {
-      await AsyncStorage.setItem(TAVILY_API_KEY_KEY, key.trim());
+      // username field is unused for this case; pass a static placeholder
+      await Keychain.setGenericPassword('tavily', key.trim(), {
+        service: TAVILY_KEYCHAIN_SERVICE,
+      });
     }
   } catch (e) {
-    console.error('Failed to save Tavily API key:', e);
+    console.error('Failed to save Tavily API key to keychain:', e);
   }
 }
