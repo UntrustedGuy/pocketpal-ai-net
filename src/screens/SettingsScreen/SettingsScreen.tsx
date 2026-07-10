@@ -66,7 +66,18 @@ import {
   getAllowedCacheTypeKOptions,
   getAllowedCacheTypeVOptions,
 } from '../../utils/flashAttnCompatibility';
-import {getSearchEndpoint, setSearchEndpoint} from '../../services/talents/webSearchConfig';
+import {
+  getSearchProvider,
+  setSearchProvider,
+  getSearchEndpoint,
+  setSearchEndpoint,
+  getGoogleCseId,
+  setGoogleCseId,
+  getApiKey,
+  setApiKey,
+  KEY_BASED_PROVIDERS,
+  WebSearchProvider,
+} from '../../services/talents/webSearchConfig';
 
 // OpenCL documentation URL (not localized)
 const OPENCL_DOCS_URL =
@@ -113,15 +124,49 @@ export const SettingsScreen: React.FC = observer(() => {
     }, 500),
   ).current;
 
-  const [webSearchUrl, setWebSearchUrl] = useState('');
+const [webSearchProvider, setWebSearchProviderState] =
+  useState<WebSearchProvider>('searxng');
+const [webSearchUrl, setWebSearchUrl] = useState('');
+const [webSearchApiKey, setWebSearchApiKeyState] = useState('');
+const [googleCseId, setGoogleCseIdState] = useState('');
+const [showProviderMenu, setShowProviderMenu] = useState(false);
+const [providerAnchor, setProviderAnchor] = useState<{x: number; y: number}>({
+  x: 0,
+  y: 0,
+});
+const providerButtonRef = useRef<View>(null);
+
+const PROVIDER_LABELS: Record<WebSearchProvider, string> = {
+  searxng: 'SearXNG (self-hosted)',
+  tavily: 'Tavily',
+  brave: 'Brave Search',
+  serper: 'Serper',
+  exa: 'Exa',
+  google_cse: 'Google Custom Search',
+};
 
 useEffect(() => {
+  getSearchProvider().then(setWebSearchProviderState);
   getSearchEndpoint().then(url => {
     if (url) {
       setWebSearchUrl(url);
     }
   });
+  getGoogleCseId().then(id => {
+    if (id) {
+      setGoogleCseIdState(id);
+    }
+  });
 }, []);
+
+// Reload the stored key whenever the selected provider changes
+useEffect(() => {
+  if (KEY_BASED_PROVIDERS.includes(webSearchProvider)) {
+    getApiKey(webSearchProvider).then(key =>
+      setWebSearchApiKeyState(key ?? ''),
+    );
+  }
+}, [webSearchProvider]);
 
 const debouncedSaveSearchUrl = useRef(
   debounce((value: string) => {
@@ -129,9 +174,44 @@ const debouncedSaveSearchUrl = useRef(
   }, 500),
 ).current;
 
+const debouncedSaveApiKey = useRef(
+  debounce((provider: WebSearchProvider, value: string) => {
+    setApiKey(provider, value);
+  }, 500),
+).current;
+
+const debouncedSaveGoogleCseId = useRef(
+  debounce((value: string) => {
+    setGoogleCseId(value);
+  }, 500),
+).current;
+
 const handleWebSearchUrlChange = (text: string) => {
   setWebSearchUrl(text);
   debouncedSaveSearchUrl(text);
+};
+
+const handleWebSearchApiKeyChange = (text: string) => {
+  setWebSearchApiKeyState(text);
+  debouncedSaveApiKey(webSearchProvider, text);
+};
+
+const handleGoogleCseIdChange = (text: string) => {
+  setGoogleCseIdState(text);
+  debouncedSaveGoogleCseId(text);
+};
+
+const handleProviderSelect = (provider: WebSearchProvider) => {
+  setWebSearchProviderState(provider);
+  setSearchProvider(provider);
+  setShowProviderMenu(false);
+};
+
+const handleProviderPress = () => {
+  providerButtonRef.current?.measure((x, y, width, height, pageX, pageY) => {
+    setProviderAnchor({x: pageX, y: pageY + height});
+    setShowProviderMenu(true);
+  });
 };
 
   useEffect(() => {
@@ -770,21 +850,124 @@ const handleWebSearchUrlChange = (text: string) => {
   <Card.Title title="Web Search" />
   <Card.Content>
     <View style={styles.settingItemContainer}>
-      <Text variant="titleMedium" style={styles.textLabel}>
-        SearXNG Instance URL
-      </Text>
-      <TextInput
-        testID="web-search-url-input"
-        style={styles.textInput}
-        value={webSearchUrl}
-        onChangeText={handleWebSearchUrlChange}
-        placeholder="https://your-searxng-instance.com"
-        autoCapitalize="none"
-        autoCorrect={false}
-      />
-      <Text variant="labelSmall" style={styles.textDescription}>
-        Enter your self-hosted SearXNG URL to let the model search the web. Leave empty to disable web search.
-      </Text>
+      <View style={styles.switchContainer}>
+        <View style={styles.textContainer}>
+          <Text variant="titleMedium" style={styles.textLabel}>
+            Search Provider
+          </Text>
+        </View>
+        <View style={styles.menuContainer}>
+          <Button
+            ref={providerButtonRef}
+            testID="web-search-provider-button"
+            mode="outlined"
+            onPress={handleProviderPress}
+            style={styles.menuButton}
+            contentStyle={styles.buttonContent}
+            icon={({size, color}) => (
+              <Icon source="chevron-down" size={size} color={color} />
+            )}>
+            {PROVIDER_LABELS[webSearchProvider]}
+          </Button>
+          <Menu
+            visible={showProviderMenu}
+            onDismiss={() => setShowProviderMenu(false)}
+            anchor={providerAnchor}
+            selectable>
+            {(Object.keys(PROVIDER_LABELS) as WebSearchProvider[]).map(
+              provider => (
+                <Menu.Item
+                  key={provider}
+                  testID={`web-search-provider-option-${provider}`}
+                  style={styles.menu}
+                  label={PROVIDER_LABELS[provider]}
+                  selected={provider === webSearchProvider}
+                  onPress={() => handleProviderSelect(provider)}
+                />
+              ),
+            )}
+          </Menu>
+        </View>
+      </View>
+
+      {webSearchProvider === 'searxng' && (
+        <>
+          <Text variant="titleMedium" style={styles.textLabel}>
+            SearXNG Instance URL
+          </Text>
+          <TextInput
+            testID="web-search-url-input"
+            style={styles.textInput}
+            value={webSearchUrl}
+            onChangeText={handleWebSearchUrlChange}
+            placeholder="https://your-searxng-instance.com"
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          <Text variant="labelSmall" style={styles.textDescription}>
+            Enter your self-hosted SearXNG URL to let the model search the
+            web. Leave empty to disable web search.
+          </Text>
+        </>
+      )}
+
+      {webSearchProvider === 'google_cse' && (
+        <>
+          <Text variant="titleMedium" style={styles.textLabel}>
+            Google API Key
+          </Text>
+          <TextInput
+            testID="web-search-google-api-key-input"
+            style={styles.textInput}
+            value={webSearchApiKey}
+            onChangeText={handleWebSearchApiKeyChange}
+            placeholder="Google API key"
+            autoCapitalize="none"
+            autoCorrect={false}
+            secureTextEntry
+          />
+          <Text variant="titleMedium" style={styles.textLabel}>
+            Search Engine ID (cx)
+          </Text>
+          <TextInput
+            testID="web-search-cse-id-input"
+            style={styles.textInput}
+            value={googleCseId}
+            onChangeText={handleGoogleCseIdChange}
+            placeholder="e.g. 017576662512468239146:omuauf_lfve"
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          <Text variant="labelSmall" style={styles.textDescription}>
+            Requires a Google Programmable Search Engine (create one at
+            programmablesearchengine.google.com) plus an API key from Google
+            Cloud Console. Key is stored encrypted on-device.
+          </Text>
+        </>
+      )}
+
+      {KEY_BASED_PROVIDERS.includes(webSearchProvider) &&
+        webSearchProvider !== 'google_cse' && (
+          <>
+            <Text variant="titleMedium" style={styles.textLabel}>
+              {PROVIDER_LABELS[webSearchProvider]} API Key
+            </Text>
+            <TextInput
+              testID="web-search-api-key-input"
+              style={styles.textInput}
+              value={webSearchApiKey}
+              onChangeText={handleWebSearchApiKeyChange}
+              placeholder="API key"
+              autoCapitalize="none"
+              autoCorrect={false}
+              secureTextEntry
+            />
+            <Text variant="labelSmall" style={styles.textDescription}>
+              Stored encrypted on-device via the Android keystore. Leave
+              empty to disable web search.
+            </Text>
+          </>
+        )}
     </View>
   </Card.Content>
 </Card>
