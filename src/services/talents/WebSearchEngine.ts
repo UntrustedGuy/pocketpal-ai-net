@@ -1,7 +1,13 @@
 import {TalentEngine, TalentResult, ToolDefinition} from './types';
-import {getSearchEndpoint} from './webSearchConfig';
+import {getSearchProvider, getSearchEndpoint, getTavilyApiKey} from './webSearchConfig';
 
 interface SearxResult {
+  title?: string;
+  url?: string;
+  content?: string;
+}
+
+interface TavilyResult {
   title?: string;
   url?: string;
   content?: string;
@@ -18,6 +24,13 @@ export class WebSearchEngine implements TalentEngine {
       return {type: 'error', summary: msg, errorMessage: msg};
     }
 
+    const provider = await getSearchProvider();
+    return provider === 'tavily'
+      ? this.executeTavily(query)
+      : this.executeSearxng(query);
+  }
+
+  private async executeSearxng(query: string): Promise<TalentResult> {
     const endpoint = await getSearchEndpoint();
     if (!endpoint) {
       const msg =
@@ -36,7 +49,7 @@ export class WebSearchEngine implements TalentEngine {
       clearTimeout(timeout);
 
       if (!res.ok) {
-        const msg = `web_search: instance returned HTTP ${res.status}`;
+        const msg = `web_search: SearXNG instance returned HTTP ${res.status}`;
         return {type: 'error', summary: msg, errorMessage: msg};
       }
 
@@ -59,13 +72,71 @@ export class WebSearchEngine implements TalentEngine {
 
       return {type: 'text', summary};
     } catch (e) {
-      const errMsg = e instanceof Error ? e.message : String(e);
-      const isAbort = errMsg.toLowerCase().includes('abort');
-      const msg = isAbort
-        ? 'web_search: request timed out. The SearXNG instance may be unreachable.'
-        : `web_search: ${errMsg}`;
-      return {type: 'error', summary: msg, errorMessage: errMsg};
+      return this.handleFetchError(e, 'SearXNG instance may be unreachable');
     }
+  }
+
+  private async executeTavily(query: string): Promise<TalentResult> {
+    const apiKey = await getTavilyApiKey();
+    if (!apiKey) {
+      const msg =
+        'web_search is not configured. The user must set a Tavily API key in Settings before this tool can be used.';
+      return {type: 'error', summary: msg, errorMessage: msg};
+    }
+
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
+      const res = await fetch('https://api.tavily.com/search', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          api_key: apiKey,
+          query,
+          max_results: 5,
+        }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+
+      if (!res.ok) {
+        const msg =
+          res.status === 401 || res.status === 403
+            ? 'web_search: Tavily rejected the API key (check it in Settings)'
+            : `web_search: Tavily returned HTTP ${res.status}`;
+        return {type: 'error', summary: msg, errorMessage: msg};
+      }
+
+      const data = await res.json();
+      const results: TavilyResult[] = Array.isArray(data?.results)
+        ? data.results.slice(0, 5)
+        : [];
+
+      if (results.length === 0) {
+        return {type: 'text', summary: `No results found for "${query}".`};
+      }
+
+      const summary = results
+        .map((r, i) => {
+          const title = r.title ?? '(untitled)';
+          const snippet = (r.content ?? '').slice(0, 300);
+          return `${i + 1}. ${title}\n${r.url ?? ''}\n${snippet}`;
+        })
+        .join('\n\n');
+
+      return {type: 'text', summary};
+    } catch (e) {
+      return this.handleFetchError(e, 'Tavily may be unreachable');
+    }
+  }
+
+  private handleFetchError(e: unknown, hint: string): TalentResult {
+    const errMsg = e instanceof Error ? e.message : String(e);
+    const isAbort = errMsg.toLowerCase().includes('abort');
+    const msg = isAbort
+      ? `web_search: request timed out. ${hint}.`
+      : `web_search: ${errMsg}`;
+    return {type: 'error', summary: msg, errorMessage: errMsg};
   }
 
   toToolDefinition(): ToolDefinition {
