@@ -12,7 +12,7 @@
 
 ## About This Fork
 
-**PocketPalNet** is a fork of [PocketPal AI](https://github.com/a-ghorbani/pocketpal-ai) that adds one major capability: **internet access for local LLMs**, via a user-configurable [SearXNG](https://github.com/searxng/searxng) instance. Every other feature of PocketPal AI — offline chat, GGUF model management, Pals, HTML/math/datetime talents — works exactly as before. This fork simply adds a new `web_search` talent, so tool-calling-capable models running fully on-device can search the web when they need current information, while everything else about the model's execution stays completely local and private.
+**PocketPalNet** is a fork of [PocketPal AI](https://github.com/a-ghorbani/pocketpal-ai) that adds one major capability: **internet access for local LLMs**, via a user-configurable [SearXNG](https://github.com/searxng/searxng) instance or API. Every other feature of PocketPal AI — offline chat, GGUF model management, Pals, HTML/math/datetime talents — works exactly as before. This fork simply adds a new `web_search` talent, so tool-calling-capable models running fully on-device can search the web when they need current information, while everything else about the model's execution stays completely local and private.
 
 You control your own SearXNG instance — nothing is routed through any server operated by this project. The app just needs a URL pointing at an instance you run yourself.
 
