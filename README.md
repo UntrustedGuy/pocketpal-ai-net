@@ -12,13 +12,13 @@
 
 ## About This Fork
 
-**PocketPalNet** is a fork of [PocketPal AI](https://github.com/a-ghorbani/pocketpal-ai) that adds one major capability: **internet access for local LLMs**, via a user-configurable [SearXNG](https://github.com/searxng/searxng) instance or API. Every other feature of PocketPal AI — offline chat, GGUF model management, Pals, HTML/math/datetime talents — works exactly as before. This fork simply adds a new `web_search` talent, so tool-calling-capable models running fully on-device can search the web when they need current information, while everything else about the model's execution stays completely local and private.
+**PocketPalNet** is a fork of [PocketPal AI](https://github.com/a-ghorbani/pocketpal-ai) that adds one major capability: **internet access for local LLMs**, via a user-configurable [SearXNG](https://github.com/searxng/searxng) instance or API KEY. Every other feature of PocketPal AI — offline chat, GGUF model management, Pals, HTML/math/datetime talents — works exactly as before. This fork simply adds a new `web_search` talent, so tool-calling-capable models running fully on-device can search the web when they need current information, while everything else about the model's execution stays completely local and private.
 
 You control your own SearXNG instance — nothing is routed through any server operated by this project. The app just needs a URL pointing at an instance you run yourself.
 
 ### Requirements for web search to actually work
 - A model with reliable tool/function-calling support in its chat template (e.g. Qwen2.5-Instruct). Not all GGUF models support this — some will silently ignore the tool and answer from memory instead.
-- An API or running SearXNG instance, reachable from your device, with JSON output format enabled.
+- An API KEY or running SearXNG instance, reachable from your device, with JSON output format enabled.
 - The `web_search` talent toggled on for the Pal you're using.
 
 ---
