@@ -127,7 +127,7 @@ python searx/webapp.py
 
 ### Screenshots:
 <p align="center">
-  <img src="https://raw.githubusercontent.com/UntrustedGuy/pocketpal-ai-net/refs/heads/main/assets/images%20and%20logos/screenshots/Android/Settings.png" width="120" alt="PocketPalNet Settings Screenshot">
+  <img src="https://raw.githubusercontent.com/UntrustedGuy/pocketpal-ai-net/refs/heads/main/assets/images%20and%20logos/screenshots/Android/Settings2.png" width="120" alt="PocketPalNet Settings Screenshot">
 </p>
 <p align="center">
   <img src="https://raw.githubusercontent.com/UntrustedGuy/pocketpal-ai-net/refs/heads/main/assets/images%20and%20logos/screenshots/Android/Pal.png" width="120" alt="PocketPalNet Pal Settings Screenshot">
