@@ -1,7 +1,19 @@
 import * as RNFS from '@dr.pogodin/react-native-fs';
 import type {LlamaContext} from 'llama.rn';
 
-import type {ChatMessage} from './types';
+/**
+ * Loosely-typed message shape covering both the app's internal ChatMessage
+ * type AND llama.rn's own RNLlamaOAICompatibleMessage wire type (which has
+ * `role: string` rather than a literal union, and an optional content
+ * field). This file only reads `role`/`content` for fingerprinting — it
+ * never needs the stricter app-level type.
+ */
+interface FingerprintableMessage {
+  role: string;
+  content?:
+    | string
+    | Array<{type?: string; text?: string; image_url?: {url: string}}>;
+}
 
 /**
  * Persists and restores the native llama.cpp KV cache to/from disk, keyed
@@ -52,7 +64,7 @@ function sessionMetaPath(conversationId: string): string {
   return `${getSessionCacheDir()}/${sanitizeId(conversationId)}_meta.json`;
 }
 
-function extractMessageText(content: ChatMessage['content']): string {
+function extractMessageText(content: FingerprintableMessage['content']): string {
   if (typeof content === 'string') {
     return content;
   }
@@ -87,7 +99,7 @@ export interface SessionFingerprintSettings {
  * (djb2) so it stays dependency-free and fast even on long histories.
  */
 export function computeSessionFingerprint(
-  messages: ChatMessage[],
+  messages: FingerprintableMessage[],
   settings: SessionFingerprintSettings,
 ): string {
   const parts: string[] = [
@@ -127,7 +139,7 @@ interface SessionMeta {
 export async function saveConversationSession(
   context: LlamaContext | undefined,
   conversationId: string | undefined,
-  messagesIncludingReply: ChatMessage[],
+  messagesIncludingReply: FingerprintableMessage[],
   settings: SessionFingerprintSettings,
 ): Promise<void> {
   if (!context || !conversationId) {
@@ -165,7 +177,7 @@ export async function saveConversationSession(
 export async function tryRestoreConversationSession(
   context: LlamaContext | undefined,
   conversationId: string | undefined,
-  expectedPrefixMessages: ChatMessage[],
+  expectedPrefixMessages: FingerprintableMessage[],
   settings: SessionFingerprintSettings,
 ): Promise<boolean> {
   if (!context || !conversationId) {
