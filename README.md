@@ -53,6 +53,18 @@ Search Engine ID (cx): https://programmablesearchengine.google.com/controlpanel/
 
 ---
 
+### 🚧 In Development
+
+These features have been added to the code but haven't been fully tested in day-to-day use yet. They're included in the app, but expect rough edges.
+
+**Faster reloading when you switch between chats or reopen the app**
+Normally, every time you open a different conversation (or close and reopen the app), the model has to re-read that entire conversation's history from scratch before it can reply — the longer the chat, the longer the wait. This update saves a snapshot of the model's "memory" of each conversation to your device after every message. When you come back to that same conversation later — even after switching to another chat or restarting the app — it can load that snapshot instead of re-reading everything, so the model should respond noticeably faster. If anything about the snapshot doesn't match (you edited an old message, switched models, changed a setting), it safely falls back to reading normally — it will never show a wrong or corrupted answer, at worst it's just not faster that one time.
+
+**Search your own notes and documents**
+A new "Local Documents" section in Settings lets you paste in text (notes, articles, anything) under a title. The app breaks it into small pieces and uses your currently-loaded model to understand each piece, saving it on your device. Once you've added documents, you can ask the model questions about them in chat, and it can search through everything you've added to find relevant information — similar to how the web search feature works, but searching your own saved text instead of the internet. This needs a model that's already loaded on your device to work (it's used to process the documents), and right now you can only add text by pasting it in — there's no "upload a file" button yet, so you'd need to copy text out of a PDF/Word doc/etc. first and paste it in.
+
+---
+
 ## Running Your Own SearXNG Instance on Android (Termux)
 
 Since PocketPal is a mobile app, this section covers running SearXNG **directly on your Android device** via Termux — no PC, server, or Docker required. If you'd rather run SearXNG elsewhere (a PC, home server, or cloud VM), any standard SearXNG installation guide works fine too; the app just needs an HTTP URL pointing at it.
