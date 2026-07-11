@@ -39,6 +39,10 @@ import {
   type AgentEvent,
   type AgentUiState,
 } from '../services/agent';
+import {
+  saveConversationSession,
+  tryRestoreConversationSession,
+} from '../utils/conversationSessionCache';
 // Helper function to prepare completion parameters using OpenAI-compatible
 // messages API. Creates the empty `assistant_turn` row up-front so the
 // active-vs-persisted predicate sees the right "last message" before the
@@ -609,6 +613,27 @@ export const useChatSession = (
     }
 
     try {
+      // Best-effort: if this exact conversation prefix (everything except
+      // the new trailing user message) matches a previously-saved KV
+      // cache snapshot, restore it so the engine only has to process the
+      // new message instead of the whole history. Silently does nothing
+      // on any mismatch/error/missing file — never affects correctness.
+      if (localContext) {
+        const allMessages = cleanCompletionParams.messages ?? [];
+        const prefixMessages = allMessages.slice(0, -1);
+        await tryRestoreConversationSession(
+          localContext,
+          messageInfo.sessionId,
+          prefixMessages,
+          {
+            modelId: modelStore.activeModel?.id,
+            n_ctx: modelStore.activeContextSettings?.n_ctx,
+            cache_type_k: modelStore.activeContextSettings?.cache_type_k,
+            cache_type_v: modelStore.activeContextSettings?.cache_type_v,
+          },
+        );
+      }
+
       const events = runAgent({
         engine,
         initialParams: cleanCompletionParams as ApiCompletionParams,
@@ -636,6 +661,10 @@ export const useChatSession = (
       // ~10× without visible loss.
       let toolCallTokensRaw = 0;
       const TOOL_TOKEN_BUCKET = 10;
+      // Captured from `run_finished` so the post-loop success path can
+      // snapshot the KV cache tagged with the exact conversation state
+      // (history + this reply) that produced it.
+      let finalAssistantText: string | null = null;
 
       for await (const event of events) {
         if (abortRef.current?.signal.aborted && event.type === 'token') {
@@ -660,6 +689,9 @@ export const useChatSession = (
           case 'run_failed':
             toolCallTokensRaw = 0;
             chatSessionStore.setToolCallTokenCount(0);
+            if (event.type === 'run_finished') {
+              finalAssistantText = event.result.finalResult?.text ?? null;
+            }
             break;
           case 'token':
             if (event.delta.toolCalls && event.delta.toolCalls.length > 0) {
@@ -700,6 +732,26 @@ export const useChatSession = (
       modelStore.setIsStreaming(false);
       chatSessionStore.setIsGenerating(false);
       chatSessionStore.setIsStopping(false);
+
+      // Best-effort: snapshot the KV cache now that this turn's prompt +
+      // reply are fully processed, tagged with the exact history that
+      // produced it. Fire-and-forget-ish (awaited, but never throws) so
+      // it doesn't block the UI from settling; a failure here only costs
+      // a future cache-miss, never correctness.
+      if (localContext && finalAssistantText !== null) {
+        const allMessages = cleanCompletionParams.messages ?? [];
+        await saveConversationSession(
+          localContext,
+          messageInfo.sessionId,
+          [...allMessages, {role: 'assistant', content: finalAssistantText}],
+          {
+            modelId: modelStore.activeModel?.id,
+            n_ctx: modelStore.activeContextSettings?.n_ctx,
+            cache_type_k: modelStore.activeContextSettings?.cache_type_k,
+            cache_type_v: modelStore.activeContextSettings?.cache_type_v,
+          },
+        );
+      }
     } catch (error) {
       console.error('Completion error:', error);
       modelStore.setInferencing(false);
