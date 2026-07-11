@@ -5,6 +5,7 @@ import {DatetimeEngine} from './DatetimeEngine';
 import {talentRegistry} from './TalentRegistry';
 import {talentUIRegistry} from './TalentUIRegistry';
 import {WebSearchEngine} from './WebSearchEngine';
+import {LocalDocsEngine} from './LocalDocsEngine';
 import type {ToolDefinition} from './types';
 
 export {TalentRegistry, talentRegistry} from './TalentRegistry';
@@ -31,6 +32,7 @@ export function registerDefaultTalents(): void {
   talentRegistry.register(new CalculateEngine());
   talentRegistry.register(new DatetimeEngine());
   talentRegistry.register(new WebSearchEngine());
+  talentRegistry.register(new LocalDocsEngine());
   // UIs
   talentUIRegistry.register(new RenderHtmlTalentUI());
   registered = true;
