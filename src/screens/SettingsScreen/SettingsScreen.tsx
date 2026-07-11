@@ -22,6 +22,7 @@ import {
   Card,
   Button,
   Icon,
+  IconButton,
   List,
   SegmentedButtons,
 } from 'react-native-paper';
@@ -78,6 +79,12 @@ import {
   KEY_BASED_PROVIDERS,
   WebSearchProvider,
 } from '../../services/talents/webSearchConfig';
+import {
+  addDocument,
+  deleteDocument,
+  listDocuments,
+  IndexedDocSummary,
+} from '../../utils/localDocsStore';
 
 // OpenCL documentation URL (not localized)
 const OPENCL_DOCS_URL =
@@ -212,6 +219,46 @@ const handleProviderPress = () => {
     setProviderAnchor({x: pageX, y: pageY + height});
     setShowProviderMenu(true);
   });
+};
+
+const [localDocs, setLocalDocs] = useState<IndexedDocSummary[]>([]);
+const [newDocTitle, setNewDocTitle] = useState('');
+const [newDocText, setNewDocText] = useState('');
+const [isIndexingDoc, setIsIndexingDoc] = useState(false);
+const [docError, setDocError] = useState<string | null>(null);
+
+const refreshLocalDocs = () => {
+  listDocuments()
+    .then(setLocalDocs)
+    .catch(e => console.warn('Failed to list local documents:', e));
+};
+
+useEffect(() => {
+  refreshLocalDocs();
+}, []);
+
+const handleAddDocument = async () => {
+  setDocError(null);
+  setIsIndexingDoc(true);
+  try {
+    await addDocument(newDocTitle, newDocText);
+    setNewDocTitle('');
+    setNewDocText('');
+    refreshLocalDocs();
+  } catch (e) {
+    setDocError(e instanceof Error ? e.message : String(e));
+  } finally {
+    setIsIndexingDoc(false);
+  }
+};
+
+const handleDeleteDocument = async (title: string) => {
+  try {
+    await deleteDocument(title);
+    refreshLocalDocs();
+  } catch (e) {
+    console.warn('Failed to delete document:', e);
+  }
 };
 
   useEffect(() => {
@@ -971,6 +1018,87 @@ const handleProviderPress = () => {
     </View>
   </Card.Content>
 </Card>
+
+          {/* Local Documents Settings */}
+          <Card elevation={0} style={styles.card}>
+            <Card.Title title="Local Documents" />
+            <Card.Content>
+              <Text variant="labelSmall" style={styles.textDescription}>
+                Paste in notes or document text to let the model search them
+                during chat. Requires a locally-loaded model (used to
+                generate embeddings).
+              </Text>
+
+              <View style={styles.settingItemContainer}>
+                <Text variant="titleMedium" style={styles.textLabel}>
+                  Title
+                </Text>
+                <TextInput
+                  testID="local-doc-title-input"
+                  style={styles.textInput}
+                  value={newDocTitle}
+                  onChangeText={setNewDocTitle}
+                  placeholder="e.g. Project Notes"
+                  autoCapitalize="none"
+                />
+                <Text variant="titleMedium" style={styles.textLabel}>
+                  Content
+                </Text>
+                <TextInput
+                  testID="local-doc-content-input"
+                  style={[styles.textInput, {minHeight: 100}]}
+                  value={newDocText}
+                  onChangeText={setNewDocText}
+                  placeholder="Paste document text here..."
+                  multiline
+                />
+                {docError && (
+                  <Text
+                    variant="labelSmall"
+                    style={[styles.textDescription, {color: 'red'}]}>
+                    {docError}
+                  </Text>
+                )}
+                <Button
+                  testID="local-doc-add-button"
+                  mode="contained"
+                  onPress={handleAddDocument}
+                  loading={isIndexingDoc}
+                  disabled={
+                    isIndexingDoc ||
+                    !newDocTitle.trim() ||
+                    !newDocText.trim()
+                  }
+                  style={{marginTop: 8}}>
+                  Add Document
+                </Button>
+              </View>
+
+              {localDocs.length > 0 && (
+                <View style={{marginTop: 16}}>
+                  {localDocs.map(doc => (
+                    <View
+                      key={doc.title}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                      }}>
+                      <Text variant="bodyMedium">
+                        {doc.title} ({doc.chunkCount} chunk
+                        {doc.chunkCount === 1 ? '' : 's'})
+                      </Text>
+                      <IconButton
+                        icon="delete"
+                        size={20}
+                        onPress={() => handleDeleteDocument(doc.title)}
+                      />
+                    </View>
+                  ))}
+                </View>
+              )}
+            </Card.Content>
+          </Card>
 
           {/* Memory Settings */}
           <Card elevation={0} style={styles.card}>
