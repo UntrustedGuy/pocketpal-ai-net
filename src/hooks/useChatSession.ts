@@ -743,7 +743,7 @@ export const useChatSession = (
         await saveConversationSession(
           localContext,
           messageInfo.sessionId,
-          [...allMessages, {role: 'assistant', content: finalAssistantText}],
+          [...allMessages, {role: 'assistant', content: finalAssistantText ?? ''}],
           {
             modelId: modelStore.activeModel?.id,
             n_ctx: modelStore.activeContextSettings?.n_ctx,
